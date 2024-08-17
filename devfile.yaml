@@ -1,56 +1,33 @@
-schemaVersion: 2.2.0
+schemaVersion: 2.1.0
 metadata:
-  name: java-springboot
-  version: 1.2.1
-  attributes:
-    alpha.dockerimage-port: 9090
-  displayName: Spring Boot®
-  description: Spring Boot® using Maven
-  icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/spring.svg
-  tags:
-    - Java
-    - Spring
-  projectType: springboot
-  language: Java
-  provider: Red Hat
-  supportUrl: https://github.com/devfile-samples/devfile-support#support-information
-parent:
-  id: java-springboot
-  registryUrl: 'https://registry.devfile.io'
-  version: 1.2.0
+  name: os-deployment
+projects:
+  - name: os-deployment
+    source:
+      type: git
+      location: "https://github.com/mowoh931/os-deployment.git"
 components:
-  - name: image-build
-    image:
-      imageName: java-springboot-image:latest
-      dockerfile:
-        uri: docker/Dockerfile
-        buildContext: .
-        rootRequired: false
-  - name: kubernetes-deploy
-    attributes:
-      deployment/replicas: 1
-      deployment/cpuRequest: 10m
-      deployment/memoryRequest: 180Mi
-      deployment/container-port: 9090
-    kubernetes:
-      uri: deploy.yaml
+  - name: os-deployment-container
+    container:
+      image: mowoh/os-deployment:latest
       endpoints:
         - name: http-9090
           targetPort: 9090
-          path: /
-          secure: true
+          exposure: public
+      memoryLimit: 512Mi
+      mountSources: true
 commands:
-  - id: build-image
-    apply:
-      component: image-build
-  - id: deployk8s
-    apply:
-      component: kubernetes-deploy
-  - id: deploy
-    composite:
-      commands:
-        - build-image
-        - deployk8s
+  - id: run
+    exec:
+      component: os-deployment-container
+      commandLine: "npm start"
       group:
-        kind: deploy
+        kind: run
+        isDefault: true
+  - id: build
+    exec:
+      component: os-deployment-container
+      commandLine: "npm install"
+      group:
+        kind: build
         isDefault: true
