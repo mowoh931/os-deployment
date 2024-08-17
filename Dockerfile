@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the Maven build output (JAR file) to the working directory
-COPY target/os-deployment-app.jar app.jar
+COPY target/* os-deployment-app.jar app.jar
 
 # Expose the application port
 EXPOSE 9090
