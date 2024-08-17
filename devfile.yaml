@@ -1,40 +1,56 @@
-schemaVersion: 2.1.0
+schemaVersion: 2.2.0
 metadata:
-  name: os-deployment
+  name: java-springboot
+  version: 1.2.1
+  attributes:
+    alpha.dockerimage-port: 9090
+  displayName: Spring Boot®
+  description: Spring Boot® using Maven
+  icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/spring.svg
+  tags:
+    - Java
+    - Spring
+  projectType: springboot
+  language: Java
+  provider: Red Hat
+  supportUrl: https://github.com/devfile-samples/devfile-support#support-information
+parent:
+  id: java-springboot
+  registryUrl: 'https://registry.devfile.io'
+  version: 1.2.0
 components:
-  - name: kubernetes
-    containerComponent:
-      kubernetes:
-        inlined: |
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: os-deployment
-          spec:
-            replicas: 3
-            selector:
-              matchLabels:
-                app: os-deployment
-            template:
-              metadata:
-                labels:
-                  app: os-deployment
-              spec:
-                containers:
-                - name: os-deployment
-                  image: mowoh/os-deployment:latest
-                  ports:
-                  - containerPort: 9090
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: os-deployment-service
-          spec:
-            selector:
-              app: os-deployment
-            ports:
-              - protocol: TCP
-                port: 80
-                targetPort: 9090
-            type: LoadBalancer
+  - name: image-build
+    image:
+      imageName: java-springboot-image:latest
+      dockerfile:
+        uri: docker/Dockerfile
+        buildContext: .
+        rootRequired: false
+  - name: kubernetes-deploy
+    attributes:
+      deployment/replicas: 1
+      deployment/cpuRequest: 10m
+      deployment/memoryRequest: 180Mi
+      deployment/container-port: 9090
+    kubernetes:
+      uri: deploy.yaml
+      endpoints:
+        - name: http-9090
+          targetPort: 9090
+          path: /
+          secure: true
+commands:
+  - id: build-image
+    apply:
+      component: image-build
+  - id: deployk8s
+    apply:
+      component: kubernetes-deploy
+  - id: deploy
+    composite:
+      commands:
+        - build-image
+        - deployk8s
+      group:
+        kind: deploy
+        isDefault: true
